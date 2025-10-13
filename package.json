@@ -9,8 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@google-cloud/vertexai": "^1.10.0",
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.17.1",
     "next": "15.5.4",
+    "openai": "^6.3.0",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
