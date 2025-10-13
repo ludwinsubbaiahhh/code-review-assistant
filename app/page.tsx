@@ -4,13 +4,15 @@
 import { useState } from 'react';
 
 export default function HomePage() {
-  // We'll now store the selected file object in state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // --- NEW ---
+  // New state to store the file's content as a string
+  const [codeContent, setCodeContent] = useState('');
+  // --- END NEW ---
   const [reviewReport, setReviewReport] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // This function updates the state when a user selects a file
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       setSelectedFile(event.target.files[0]);
@@ -27,13 +29,21 @@ export default function HomePage() {
     setIsLoading(true);
     setError('');
     setReviewReport('');
+    // --- NEW ---
+    // Clear previous code content on new submission
+    setCodeContent('');
+    // --- END NEW ---
 
-    // FileReader is a browser API to read file contents
     const reader = new FileReader();
 
     reader.onload = async (e) => {
-      const codeContent = e.target?.result as string;
+      const fileContent = e.target?.result as string;
       const fileName = selectedFile.name;
+
+      // --- NEW ---
+      // Set the code content state so we can display it
+      setCodeContent(fileContent);
+      // --- END NEW ---
 
       try {
         const response = await fetch('/api/review', {
@@ -41,7 +51,8 @@ export default function HomePage() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ fileName, codeContent }),
+          // Send the file's content in the request body
+          body: JSON.stringify({ fileName, codeContent: fileContent }),
         });
 
         const data = await response.json();
@@ -63,7 +74,6 @@ export default function HomePage() {
       setIsLoading(false);
     };
 
-    // This kicks off the file reading process
     reader.readAsText(selectedFile);
   };
 
@@ -94,10 +104,19 @@ export default function HomePage() {
       
       {error && <div className="mt-6 w-full max-w-2xl bg-red-900 border border-red-700 p-4 rounded text-center">{error}</div>}
       
+      {/* --- NEW --- */}
+      {/* This block will now display the uploaded code */}
+      {codeContent && (
+        <div className="mt-6 w-full max-w-2xl bg-gray-800 p-6 rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold mb-4">Uploaded Code</h2>
+          <pre className="bg-gray-900 p-4 rounded whitespace-pre-wrap font-mono text-sm">{codeContent}</pre>
+        </div>
+      )}
+      {/* --- END NEW --- */}
+      
       {reviewReport && (
         <div className="mt-6 w-full max-w-2xl bg-gray-800 p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-4">Review Report</h2>
-          {/* Using a div with whitespace-pre-wrap allows Markdown-like text to format correctly */}
           <div className="bg-gray-900 p-4 rounded whitespace-pre-wrap font-sans">{reviewReport}</div>
         </div>
       )}
