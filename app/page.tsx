@@ -1,42 +1,70 @@
 // File: app/page.tsx
-'use client'; // This directive is necessary for using React hooks like useState
+'use client';
 
 import { useState } from 'react';
 
 export default function HomePage() {
-  const [fileName, setFileName] = useState('');
-  const [codeContent, setCodeContent] = useState('');
+  // We'll now store the selected file object in state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [reviewReport, setReviewReport] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // This function updates the state when a user selects a file
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      setSelectedFile(event.target.files[0]);
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!selectedFile) {
+      setError('Please select a file to review.');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
     setReviewReport('');
 
-    try {
-      const response = await fetch('/api/review', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fileName, codeContent }),
-      });
+    // FileReader is a browser API to read file contents
+    const reader = new FileReader();
 
-      const data = await response.json();
+    reader.onload = async (e) => {
+      const codeContent = e.target?.result as string;
+      const fileName = selectedFile.name;
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong');
+      try {
+        const response = await fetch('/api/review', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fileName, codeContent }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Something went wrong');
+        }
+
+        setReviewReport(data.report);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      setReviewReport(data.report);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
+    reader.onerror = () => {
+      setError('Failed to read the file.');
       setIsLoading(false);
-    }
+    };
+
+    // This kicks off the file reading process
+    reader.readAsText(selectedFile);
   };
 
   return (
@@ -44,36 +72,21 @@ export default function HomePage() {
       <h1 className="text-4xl font-bold mb-6">AI Code Review Assistant</h1>
       
       <form onSubmit={handleSubmit} className="w-full max-w-2xl bg-gray-800 p-6 rounded-lg shadow-md">
-        <div className="mb-4">
-          <label htmlFor="fileName" className="block text-sm font-medium mb-2">File Name</label>
-          <input
-            id="fileName"
-            type="text"
-            value={fileName}
-            onChange={(e) => setFileName(e.target.value)}
-            placeholder="e.g., app.js"
-            required
-            className="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        
         <div className="mb-6">
-          <label htmlFor="codeContent" className="block text-sm font-medium mb-2">Paste Your Code Here</label>
-          <textarea
-            id="codeContent"
-            value={codeContent}
-            onChange={(e) => setCodeContent(e.target.value)}
-            rows={15}
-            placeholder="function hello() { console.log('world'); }"
+          <label htmlFor="file-upload" className="block text-sm font-medium mb-2">Source Code File</label>
+          <input
+            id="file-upload"
+            type="file"
+            onChange={handleFileChange}
             required
-            className="w-full p-2 bg-gray-700 rounded border border-gray-600 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
           />
         </div>
         
         <button
           type="submit"
-          disabled={isLoading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
+          disabled={isLoading || !selectedFile}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500 disabled:cursor-not-allowed"
         >
           {isLoading ? 'Analyzing...' : 'Review My Code'}
         </button>
@@ -84,7 +97,8 @@ export default function HomePage() {
       {reviewReport && (
         <div className="mt-6 w-full max-w-2xl bg-gray-800 p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-4">Review Report</h2>
-          <pre className="bg-gray-900 p-4 rounded whitespace-pre-wrap font-sans">{reviewReport}</pre>
+          {/* Using a div with whitespace-pre-wrap allows Markdown-like text to format correctly */}
+          <div className="bg-gray-900 p-4 rounded whitespace-pre-wrap font-sans">{reviewReport}</div>
         </div>
       )}
     </main>
