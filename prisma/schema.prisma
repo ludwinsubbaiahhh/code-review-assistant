@@ -1,3 +1,4 @@
+// File: prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,11 +8,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Defines the table for storing code review reports
 model Review {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   fileName  String
-  code      String   @db.Text // @db.Text is good for long code blocks
-  report    String   @db.Text // @db.Text is good for long LLM reports
+  code      String   @db.Text
+  report    Json     // We will store the full JSON report
 }
