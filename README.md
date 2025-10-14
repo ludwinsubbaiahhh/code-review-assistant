@@ -7,11 +7,9 @@
 [![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
 [![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com/)
 
-**Live Demo:** [Link to your deployed Vercel application]
+**Live Demo:** https://code-review-assistant-ak87r55yp-ludwin-subbaiahs-projects.vercel.app/
 
 ---
-
-![CodeReview AI Screenshot](<Link to a screenshot of your app, maybe the report page>)
 
 ## 🚀 Features
 
@@ -49,5 +47,5 @@ To run this project locally, follow these steps:
 
 **1. Clone the repository:**
 ```bash
-git clone [https://github.com/ludwinsubbaiahhh/code-review-assistant.git](https://github.com/YOUR_USERNAME/code-review-assistant.git)
+git clone [https://github.com/ludwinsubbaiahhh/code-review-assistant.git](https://github.com/ludwinsubbaiahhh/code-review-assistant.git)
 cd code-review-assistant
