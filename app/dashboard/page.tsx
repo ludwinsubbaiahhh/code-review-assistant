@@ -1,15 +1,13 @@
 // File: app/dashboard/page.tsx
-import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import prisma from "@/lib/prisma";
-import { AdvancedReviewReport } from "@/lib/llm"; // Import our report structure
+import { AdvancedReviewReport } from "@/lib/llm";
 import { FileText, Star, BarChart2 } from "lucide-react";
 import Link from "next/link";
 
 // Helper to safely parse the JSON report from the database
 function parseReport(report: any): AdvancedReviewReport | null {
   try {
-    // If the report is already an object (which it should be), just type-assert it
     if (typeof report === 'object' && report !== null) {
       return report as AdvancedReviewReport;
     }
@@ -72,22 +70,25 @@ export default async function DashboardPage() {
             const report = parseReport(review.report);
             if (!report) return null; // Skip rendering if report is invalid
 
+            // Each item is now a clickable link to its detail page
             return (
-              <div key={review.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-4">
-                  <FileText className="h-8 w-8 text-purple-500" />
-                  <div>
-                    <p className="font-semibold text-slate-800">{review.fileName}</p>
-                    <p className="text-sm text-slate-500">
-                      {report.language} • {new Date(review.createdAt).toLocaleDateString()}
-                    </p>
+              <Link key={review.id} href={`/review/${review.id}`} className="block">
+                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <FileText className="h-8 w-8 text-purple-500" />
+                    <div>
+                      <p className="font-semibold text-slate-800">{review.fileName}</p>
+                      <p className="text-sm text-slate-500">
+                        {report.language} • {new Date(review.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                      <p className="font-bold text-lg">{report.overallScore.toFixed(1)} <span className="text-sm font-normal text-slate-500">/ 10</span></p>
+                      <p className="text-sm text-slate-500">{report.issuesFound} issues</p>
                   </div>
                 </div>
-                <div className="text-right">
-                    <p className="font-bold text-lg">{report.overallScore.toFixed(1)} <span className="text-sm font-normal text-slate-500">/ 10</span></p>
-                    <p className="text-sm text-slate-500">{report.issuesFound} issues</p>
-                </div>
-              </div>
+              </Link>
             );
           })}
           {reviews.length === 0 && (
