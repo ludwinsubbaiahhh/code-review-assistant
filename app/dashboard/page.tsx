@@ -1,12 +1,12 @@
 // File: app/dashboard/page.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import prisma from "@/lib/prisma";
-import { AdvancedReviewReport } from "@/lib/llm";
+import { DetailedReviewReport } from "@/lib/llm";
 import { FileText, Star, BarChart2 } from "lucide-react";
 import Link from "next/link";
 
 // Helper to safely parse and handle both old and new report formats
-function parseReport(report: any): AdvancedReviewReport | null {
+function parseReport(report: any): DetailedReviewReport | null {
   try {
     let parsedReport: any;
     if (typeof report === 'object' && report !== null) {
@@ -27,7 +27,7 @@ function parseReport(report: any): AdvancedReviewReport | null {
       parsedReport.improvementSuggestions = [];
     }
     
-    return parsedReport as AdvancedReviewReport;
+    return parsedReport as DetailedReviewReport;
   } catch (e) {
     console.error("Failed to parse report:", e);
     return null;
