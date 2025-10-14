@@ -7,25 +7,28 @@ import { Code, FileText, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-// Helper to safely parse and validate the JSON report
+// Helper to safely parse and handle both old and new report formats
 function parseReport(report: any): AdvancedReviewReport | null {
   try {
     let parsedReport: any;
-    if (typeof report === 'string') {
-      parsedReport = JSON.parse(report);
-    } else if (typeof report === 'object' && report !== null) {
+    if (typeof report === 'object' && report !== null) {
       parsedReport = report;
-    } else {
-      return null;
+    } else { return null; }
+
+    // This handles both old ("sections") and new ("improvementSuggestions") data
+    if (parsedReport.sections && !parsedReport.improvementSuggestions) {
+      parsedReport.improvementSuggestions = parsedReport.sections.map((s: any) => ({
+        severity: 'MEDIUM',
+        title: s.title,
+        description: s.feedback,
+        lineNumber: 0, // Old format didn't have line numbers
+      }));
     }
 
-    // --- THIS IS THE FIX ---
-    // Ensure improvementSuggestions is always an array to prevent crashes
     if (!Array.isArray(parsedReport.improvementSuggestions)) {
       parsedReport.improvementSuggestions = [];
     }
-    // --- END OF FIX ---
-
+    
     return parsedReport as AdvancedReviewReport;
   } catch (e) {
     console.error("Failed to parse report:", e);
@@ -48,7 +51,7 @@ export default async function ReviewDetailPage({ params }: { params: { id: strin
   });
 
   if (!review) {
-    notFound();
+    notFound(); // If no review is found, show a 404 page
   }
 
   const report = parseReport(review.report);
@@ -83,7 +86,7 @@ export default async function ReviewDetailPage({ params }: { params: { id: strin
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Overall Score</CardTitle></CardHeader>
-          <CardContent><div className="text-3xl font-bold">{report.overallScore}<span className="text-xl text-slate-500">/10</span></div></CardContent>
+          <CardContent><div className="text-3xl font-bold">{report.overallScore}<span className="text-xl text-slate-500">/100</span></div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Issues Found</CardTitle></CardHeader>

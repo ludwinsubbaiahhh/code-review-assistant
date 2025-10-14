@@ -5,63 +5,87 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// --- NEW ---
-// Define a TypeScript type for our structured report for type safety
-export interface StructuredReviewReport {
-  overallScore: number; // A score from 0 to 100
+// New, more detailed structure for our report
+export interface DetailedReviewReport {
+  overallScore: number;
   summary: string;
-  sections: {
-    title: string; // e.g., "Readability", "Modularity"
-    score: number; // A score for this specific section
-    feedback: string;
+  language: string;
+  detailedAnalysis: {
+    category: 'Readability' | 'Modularity & Best Practices' | 'Potential Bugs';
+    issues: {
+      severity: 'HIGH' | 'MEDIUM' | 'LOW';
+      title: string;
+      description: string;
+      lineNumber: number;
+      recommendation: string; // A code snippet showing the fix
+    }[];
   }[];
 }
-// --- END NEW ---
 
-export async function getCodeReview(codeContent: string): Promise<StructuredReviewReport> {
+export async function getCodeReview(codeContent: string): Promise<DetailedReviewReport> {
   try {
     const prompt = `
       You are an expert code reviewer. Analyze the following code snippet.
-      Your response MUST be a valid JSON object. Do not include any text or markdown formatting before or after the JSON object.
-      The JSON object should conform to the following structure:
+      Your response MUST be a single, valid JSON object and nothing else.
+      The JSON object must follow this exact structure, with three distinct analysis sections:
       {
-        "overallScore": number (0-100),
-        "summary": "A brief summary of the code's quality.",
-        "sections": [
+        "overallScore": number (a score from 0 to 100),
+        "summary": "string" (A brief 1-2 sentence summary of the code's quality),
+        "language": "string" (the detected programming language),
+        "detailedAnalysis": [
           {
-            "title": "Readability",
-            "score": number (0-100),
-            "feedback": "Detailed feedback on code readability, formatting, and clarity."
+            "category": "Readability",
+            "issues": [
+              {
+                "severity": "HIGH" | "MEDIUM" | "LOW",
+                "title": "string" (Short title for the readability issue),
+                "description": "string" (Detailed explanation of the issue),
+                "lineNumber": number,
+                "recommendation": "string" (A code snippet showing the recommended change, e.g., 'const userAccountBalance = 1000; // Instead of: const user_acc_bal = 1000;')
+              }
+            ]
           },
           {
-            "title": "Modularity & Best Practices",
-            "score": number (0-100),
-            "feedback": "Analysis of code structure, use of functions, and adherence to best practices."
+            "category": "Modularity & Best Practices",
+            "issues": [
+              {
+                "severity": "HIGH" | "MEDIUM" | "LOW",
+                "title": "string" (Short title for the modularity issue),
+                "description": "string" (Detailed explanation),
+                "lineNumber": number,
+                "recommendation": "string" (A code snippet showing the fix)
+              }
+            ]
           },
           {
-            "title": "Potential Bugs & Errors",
-            "score": number (0-100),
-            "feedback": "Identification of any potential bugs, logical errors, or edge cases not handled."
+            "category": "Potential Bugs",
+            "issues": [
+              {
+                "severity": "HIGH" | "MEDIUM" | "LOW",
+                "title": "string" (Short title for the potential bug),
+                "description": "string" (Detailed explanation),
+                "lineNumber": number,
+                "recommendation": "string" (A code snippet showing the fix)
+              }
+            ]
           }
         ]
       }
+      If a category has no issues, return an empty "issues" array for it.
 
-      Here is the code to review:
+      Code to review:
       \`\`\`
       ${codeContent}
       \`\`\`
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4-turbo",
       messages: [
         { role: "system", content: "You are an expert code reviewer that only responds with valid JSON." },
         { role: "user", content: prompt }
       ],
-      // --- NEW ---
-      // Force the model to output JSON
       response_format: { type: "json_object" },
-      // --- END NEW ---
     });
 
     const jsonResponse = response.choices[0].message.content;
@@ -69,8 +93,7 @@ export async function getCodeReview(codeContent: string): Promise<StructuredRevi
       throw new Error("AI returned an empty response.");
     }
     
-    // Parse the JSON string into an object
-    return JSON.parse(jsonResponse) as StructuredReviewReport;
+    return JSON.parse(jsonResponse) as DetailedReviewReport;
 
   } catch (error) {
     console.error('Error getting code review from OpenAI:', error);

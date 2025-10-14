@@ -2,61 +2,45 @@
 'use client';
 
 import { useState } from 'react';
-// Import the TypeScript type from our LLM file
-import { StructuredReviewReport } from '../lib/llm';
+import { DetailedReviewReport } from '../lib/llm'; // Import the new type
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { FileUp, Code } from 'lucide-react';
 
-// A simple component for our score "bar graphs"
-const ScoreBar = ({ score }: { score: number }) => {
-  const getColor = (s: number) => {
-    if (s < 50) return 'bg-red-500';
-    if (s < 80) return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
-  return (
-    <div className="w-full bg-gray-700 rounded-full h-2.5">
-      <div
-        className={`${getColor(score)} h-2.5 rounded-full`}
-        style={{ width: `${score}%` }}
-      ></div>
-    </div>
-  );
+const getBadgeVariant = (severity: 'HIGH' | 'MEDIUM' | 'LOW'): "destructive" | "default" | "secondary" => {
+  switch (severity) {
+    case 'HIGH': return 'destructive';
+    case 'MEDIUM': return 'default';
+    case 'LOW': return 'secondary';
+  }
 };
 
 export default function HomePage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [codeContent, setCodeContent] = useState('');
-  // The state now expects our structured report object, or null
-  const [reviewReport, setReviewReport] = useState<StructuredReviewReport | null>(null);
+  const [reviewReport, setReviewReport] = useState<DetailedReviewReport | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // No changes needed in handleFileChange or handleSubmit
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setSelectedFile(event.target.files[0]);
-    }
+    if (event.target.files) setSelectedFile(event.target.files[0]);
   };
-
   const handleSubmit = async (event: React.FormEvent) => {
-    // ... (rest of the handleSubmit function is the same, no changes needed here) ...
     event.preventDefault();
-    if (!selectedFile) {
-      setError('Please select a file to review.');
-      return;
-    }
+    if (!selectedFile) { setError('Please select a file to review.'); return; }
     setIsLoading(true);
     setError('');
     setReviewReport(null);
-    setCodeContent('');
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const fileContent = e.target?.result as string;
+      const codeContent = e.target?.result as string;
       const fileName = selectedFile.name;
-      setCodeContent(fileContent);
       try {
         const response = await fetch('/api/review', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ fileName, codeContent: fileContent }),
+          body: JSON.stringify({ fileName, codeContent }),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Something went wrong');
@@ -67,65 +51,71 @@ export default function HomePage() {
         setIsLoading(false);
       }
     };
-    reader.onerror = () => {
-      setError('Failed to read the file.');
-      setIsLoading(false);
-    };
     reader.readAsText(selectedFile);
   };
 
-
   return (
-    <main className="flex min-h-screen flex-col items-center bg-gray-900 text-white p-8 font-sans">
-      <h1 className="text-4xl font-bold mb-6">AI Code Review Assistant</h1>
-      
-      <form onSubmit={handleSubmit} className="w-full max-w-2xl bg-gray-800 p-6 rounded-lg shadow-md mb-8">
-        <div className="mb-6">
-          <label htmlFor="file-upload" className="block text-sm font-medium mb-2">Source Code File</label>
-          <input id="file-upload" type="file" onChange={handleFileChange} required className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"/>
-        </div>
-        <button type="submit" disabled={isLoading || !selectedFile} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500 disabled:cursor-not-allowed">
-          {isLoading ? 'Analyzing...' : 'Review My Code'}
-        </button>
-      </form>
-      
-      {error && <div className="w-full max-w-4xl bg-red-900 border border-red-700 p-4 rounded text-center">{error}</div>}
-      
-      {reviewReport && (
-        <div className="w-full max-w-4xl space-y-6">
-          {/* Overall Score Section */}
-          <div className="bg-gray-800 p-6 rounded-lg shadow-md">
-             <h2 className="text-2xl font-bold mb-4">Overall Code Health</h2>
-             <div className="flex items-center gap-4">
-                <div className="text-5xl font-bold text-green-400">{reviewReport.overallScore}<span className="text-2xl text-gray-400">/100</span></div>
-                <p className="text-gray-300 flex-1">{reviewReport.summary}</p>
-             </div>
-          </div>
-
-          {/* Code and Sections Side-by-Side */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left side: Uploaded Code */}
-            <div className="bg-gray-800 p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-bold mb-4">Uploaded Code</h2>
-              <pre className="bg-gray-900 p-4 rounded whitespace-pre-wrap font-mono text-sm max-h-96 overflow-y-auto">{codeContent}</pre>
-            </div>
-            {/* Right side: Detailed Sections */}
-            <div className="bg-gray-800 p-6 rounded-lg shadow-md space-y-6">
-              <h2 className="text-xl font-bold mb-2">Detailed Analysis</h2>
-              {reviewReport.sections.map((section, index) => (
-                <div key={index}>
-                  <div className="flex justify-between items-baseline mb-2">
-                    <h3 className="font-semibold">{section.title}</h3>
-                    <span className="font-bold text-lg">{section.score}<span className="text-xs text-gray-400">/100</span></span>
-                  </div>
-                  <ScoreBar score={section.score} />
-                  <p className="text-sm text-gray-300 mt-2">{section.feedback}</p>
+    <main className="flex flex-col items-center p-8 font-sans">
+      <div className="w-full max-w-4xl">
+        {!reviewReport && (
+          <>
+            <h1 className="text-4xl font-bold text-center mb-2 text-slate-800">AI-Powered Code Analysis</h1>
+            <p className="text-slate-600 text-center mb-8">Upload your source code to get an instant review.</p>
+          </>
+        )}
+        
+        <Card className="mb-8 shadow-lg">
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit} className="flex items-center gap-4">
+              <label htmlFor="file-upload" className="flex-1">
+                <div className="flex items-center gap-2 p-2 border-2 border-dashed rounded-md cursor-pointer hover:bg-slate-50">
+                  <FileUp className="h-5 w-5 text-slate-500" />
+                  <span className="text-sm text-slate-600">{selectedFile ? selectedFile.name : 'Click to upload a source file'}</span>
                 </div>
-              ))}
-            </div>
+                <input id="file-upload" type="file" onChange={handleFileChange} required className="hidden" />
+              </label>
+              <Button type="submit" disabled={isLoading || !selectedFile} className="bg-purple-600 hover:bg-purple-700 px-8">
+                {isLoading ? 'Analyzing...' : 'Start AI Analysis'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {error && <Card className="bg-red-50 border-red-200"><CardContent className="p-4 text-center text-red-700">{error}</CardContent></Card>}
+
+        {reviewReport && (
+          <div className="space-y-6">
+            <Card>
+                <CardHeader><CardTitle className="text-sm font-medium">Overall Score</CardTitle></CardHeader>
+                <CardContent><div className="text-3xl font-bold">{reviewReport.overallScore}<span className="text-xl text-slate-500">/100</span></div><p className="text-sm text-slate-600 mt-1">{reviewReport.summary}</p></CardContent>
+            </Card>
+
+            {/* Map over the detailed analysis sections */}
+            {reviewReport.detailedAnalysis.map((section) => (
+              <Card key={section.category}>
+                <CardHeader><CardTitle className="text-lg">{section.category}</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  {section.issues.length > 0 ? (
+                    section.issues.map((issue, index) => (
+                      <div key={index} className="flex items-start gap-4 p-4 border rounded-md">
+                        <Badge variant={getBadgeVariant(issue.severity)}>{issue.severity}</Badge>
+                        <div>
+                          <h3 className="font-semibold">{issue.title}</h3>
+                          <p className="text-sm text-slate-600 mb-2">{issue.description}</p>
+                          <div className="text-xs text-slate-500 mb-2 flex items-center gap-1"><Code className="h-3 w-3" /><span>Line {issue.lineNumber}</span></div>
+                          <pre className="bg-slate-100 p-2 rounded-md text-xs font-mono">{issue.recommendation}</pre>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-slate-500 text-center py-4">No issues found in this category.</p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </main>
   );
 }

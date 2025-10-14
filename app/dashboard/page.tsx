@@ -5,13 +5,29 @@ import { AdvancedReviewReport } from "@/lib/llm";
 import { FileText, Star, BarChart2 } from "lucide-react";
 import Link from "next/link";
 
-// Helper to safely parse the JSON report from the database
+// Helper to safely parse and handle both old and new report formats
 function parseReport(report: any): AdvancedReviewReport | null {
   try {
+    let parsedReport: any;
     if (typeof report === 'object' && report !== null) {
-      return report as AdvancedReviewReport;
+      parsedReport = report;
+    } else { return null; }
+
+    // This handles both old ("sections") and new ("improvementSuggestions") data
+    if (parsedReport.sections && !parsedReport.improvementSuggestions) {
+      parsedReport.improvementSuggestions = parsedReport.sections.map((s: any) => ({
+        severity: 'MEDIUM',
+        title: s.title,
+        description: s.feedback,
+        lineNumber: 0, // Old format didn't have line numbers
+      }));
     }
-    return null;
+
+    if (!Array.isArray(parsedReport.improvementSuggestions)) {
+      parsedReport.improvementSuggestions = [];
+    }
+    
+    return parsedReport as AdvancedReviewReport;
   } catch (e) {
     console.error("Failed to parse report:", e);
     return null;
@@ -55,7 +71,7 @@ export default async function DashboardPage() {
             <Star className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{averageScore}<span className="text-xl text-slate-500">/10</span></div>
+            <div className="text-3xl font-bold">{averageScore}<span className="text-xl text-slate-500">/100</span></div>
           </CardContent>
         </Card>
       </div>
@@ -70,7 +86,6 @@ export default async function DashboardPage() {
             const report = parseReport(review.report);
             if (!report) return null; // Skip rendering if report is invalid
 
-            // Each item is now a clickable link to its detail page
             return (
               <Link key={review.id} href={`/review/${review.id}`} className="block">
                 <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors">
@@ -79,12 +94,12 @@ export default async function DashboardPage() {
                     <div>
                       <p className="font-semibold text-slate-800">{review.fileName}</p>
                       <p className="text-sm text-slate-500">
-                        {report.language} • {new Date(review.createdAt).toLocaleDateString()}
+                        {report.language || 'N/A'} • {new Date(review.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                      <p className="font-bold text-lg">{report.overallScore.toFixed(1)} <span className="text-sm font-normal text-slate-500">/ 10</span></p>
+                      <p className="font-bold text-lg">{report.overallScore.toFixed(0)} <span className="text-sm font-normal text-slate-500">/ 100</span></p>
                       <p className="text-sm text-slate-500">{report.issuesFound} issues</p>
                   </div>
                 </div>

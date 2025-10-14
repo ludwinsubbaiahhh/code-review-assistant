@@ -1,7 +1,7 @@
 // File: app/api/review/route.ts
 import { NextResponse } from 'next/server';
 import { getCodeReview } from '@/lib/llm';
-import prisma from '@/lib/prisma'; // --- NEW: Import our Prisma client
+import prisma from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
@@ -12,24 +12,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'File name and code content are required.' }, { status: 400 });
     }
     
-    // Call the OpenAI API to get a real review
     const reviewReport = await getCodeReview(codeContent);
 
-    // --- NEW: Save the report to the database ---
+    // --- NEW: Add this log to debug ---
+    console.log("Raw AI Response:", JSON.stringify(reviewReport, null, 2));
+    // --- END NEW PART ---
+
     try {
       await prisma.review.create({
         data: {
           fileName: fileName,
           code: codeContent,
-          report: reviewReport, // Prisma automatically handles converting the JS object to a JSON type for the DB
+          report: reviewReport,
         },
       });
     } catch (dbError) {
       console.error("Database error:", dbError);
-      // We can still return the report to the user even if saving fails,
-      // so we don't throw an error here.
     }
-    // --- END OF NEW PART ---
     
     return NextResponse.json({ report: reviewReport }, { status: 200 });
 
