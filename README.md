@@ -49,5 +49,5 @@ To run this project locally, follow these steps:
 
 **1. Clone the repository:**
 ```bash
-git clone [https://github.com/YOUR_USERNAME/code-review-assistant.git](https://github.com/YOUR_USERNAME/code-review-assistant.git)
+git clone [https://github.com/ludwinsubbaiahhh/code-review-assistant.git](https://github.com/YOUR_USERNAME/code-review-assistant.git)
 cd code-review-assistant
