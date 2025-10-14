@@ -23,7 +23,7 @@ export async function POST(request: Request) {
         data: {
           fileName: fileName,
           code: codeContent,
-          report: reviewReport,
+          report: reviewReport as any,
         },
       });
     } catch (dbError) {
