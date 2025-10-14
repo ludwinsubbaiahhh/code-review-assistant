@@ -57,16 +57,22 @@ export default function HomePage() {
     reader.readAsText(selectedFile);
   };
 
+  // Helper to calculate total issues from the report state
+  const totalIssues = reviewReport?.detailedAnalysis?.reduce((acc, section) => acc + (section.issues?.length || 0), 0) || 0;
+  const allIssues = reviewReport?.detailedAnalysis?.flatMap(section => section.issues || []) || [];
+
   return (
     <main className="flex flex-col items-center p-8 font-sans">
       <div className="w-full max-w-6xl">
+        {/* Conditional Title */}
         {!reviewReport && (
-          <>
-            <h1 className="text-4xl font-bold text-center mb-2 text-slate-800">AI-Powered Code Analysis</h1>
-            <p className="text-slate-600 text-center mb-8">Upload your source code to get an instant review.</p>
-          </>
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-2 text-slate-800">AI-Powered Code Analysis</h1>
+            <p className="text-slate-600 mb-8">Upload your source code to get an instant review.</p>
+          </div>
         )}
         
+        {/* Upload Form */}
         <Card className="mb-8 shadow-lg max-w-4xl mx-auto">
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="flex items-center gap-4">
@@ -86,48 +92,63 @@ export default function HomePage() {
 
         {error && <Card className="bg-red-50 border-red-200 max-w-4xl mx-auto"><CardContent className="p-4 text-center text-red-700">{error}</CardContent></Card>}
 
-        {reviewReport && (
+        {/* This is the new, unified report layout */}
+        {reviewReport && selectedFile && (
           <div className="space-y-6">
-            <Card>
-              <CardHeader><CardTitle className="text-sm font-medium">Overall Score</CardTitle></CardHeader>
-              <CardContent><div className="text-3xl font-bold">{reviewReport.overallScore}<span className="text-xl text-slate-500">/100</span></div><p className="text-sm text-slate-600 mt-1">{reviewReport.summary}</p></CardContent>
-            </Card>
+            <div className="flex items-baseline gap-4">
+              <h1 className="text-3xl font-bold">{selectedFile.name}</h1>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Overall Score</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{reviewReport.overallScore}<span className="text-xl text-slate-500">/100</span></div></CardContent></Card>
+              <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Issues Found</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{totalIssues}</div></CardContent></Card>
+              <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Language</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{reviewReport.language}</div></CardContent></Card>
+            </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="lg:col-span-1">
-                <CardHeader><CardTitle className="text-lg">Uploaded Code</CardTitle></CardHeader>
-                <CardContent>
-                  <pre className="bg-slate-100 p-4 rounded-md text-xs font-mono max-h-[60vh] overflow-y-auto">{codeContent}</pre>
-                </CardContent>
-              </Card>
-
+              <Card className="lg:col-span-1"><CardHeader><CardTitle className="text-lg">Reviewed Code</CardTitle></CardHeader><CardContent><pre className="bg-slate-100 p-4 rounded-md text-xs font-mono max-h-[80vh] overflow-y-auto">{codeContent}</pre></CardContent></Card>
               <div className="space-y-6 lg:col-span-1">
                 {reviewReport.detailedAnalysis.map((section) => (
                   <Card key={section.category}>
                     <CardHeader><CardTitle className="text-lg">{section.category}</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
-                      {section.issues.length > 0 ? (
+                      {section.issues && section.issues.length > 0 ? (
                         section.issues.map((issue, index) => (
                           <div key={index} className="flex items-start gap-4 p-4 border rounded-md">
                             <Badge variant={getBadgeVariant(issue.severity)}>{issue.severity}</Badge>
-                            {/* --- THIS IS THE FIX --- */}
                             <div className="min-w-0">
                               <h3 className="font-semibold">{issue.title}</h3>
                               <p className="text-sm text-slate-600 mb-2 break-words">{issue.description}</p>
                               <div className="text-xs text-slate-500 mb-2 flex items-center gap-1"><Code className="h-3 w-3" /><span>Line {issue.lineNumber}</span></div>
                               <pre className="bg-slate-100 p-2 rounded-md text-xs font-mono whitespace-pre-wrap break-words">{issue.recommendation}</pre>
                             </div>
-                            {/* --- END OF FIX --- */}
                           </div>
                         ))
-                      ) : (
-                        <p className="text-slate-500 text-center py-4">No issues found in this category.</p>
-                      )}
+                      ) : ( <p className="text-slate-500 text-center py-4">No issues found in this category.</p> )}
                     </CardContent>
                   </Card>
                 ))}
               </div>
             </div>
+
+            <Card>
+              <CardHeader><CardTitle className="text-lg">Consolidated Improvement Suggestions</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                {allIssues.length > 0 ? (
+                  allIssues.map((issue, index) => (
+                    <div key={index} className="flex items-start gap-4 p-4 border rounded-md">
+                      <Badge variant={getBadgeVariant(issue.severity)}>{issue.severity}</Badge>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold">{issue.title} <span className="text-xs text-slate-500">({issue.category})</span></h3>
+                        <p className="text-sm text-slate-600 mb-2 break-words">{issue.description}</p>
+                        <div className="text-xs text-slate-500 mb-2 flex items-center gap-1"><Code className="h-3 w-3" /><span>Line {issue.lineNumber}</span></div>
+                        <pre className="bg-slate-100 p-2 rounded-md text-xs font-mono whitespace-pre-wrap break-words">{issue.recommendation}</pre>
+                      </div>
+                    </div>
+                  ))
+                ) : ( <p className="text-slate-500 text-center py-4">No specific improvement suggestions found.</p> )}
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>

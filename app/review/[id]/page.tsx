@@ -24,7 +24,8 @@ export default async function ReviewDetailPage({ params }: { params: { id: strin
       return <div>Error: Report data is missing or corrupted.</div>;
   }
 
-  const totalIssues = report.detailedAnalysis?.reduce((acc, section) => acc + (section.issues?.length || 0), 0) || 0;
+  const allIssues = report.detailedAnalysis?.flatMap(section => section.issues || []) || [];
+  const totalIssues = allIssues.length;
 
   return (
     <div className="space-y-6">
@@ -48,10 +49,9 @@ export default async function ReviewDetailPage({ params }: { params: { id: strin
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Language</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{report.language}</div></CardContent></Card>
       </div>
       
-      {/* --- THIS IS THE NEW PART --- */}
-      {/* New Two-Column Layout */}
+      {/* Upper Section: Two-Column Layout for Code and Categorized Analysis */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column: Code Display */}
+        {/* Left Column: Reviewed Code */}
         <Card className="lg:col-span-1">
           <CardHeader><CardTitle className="text-lg">Reviewed Code</CardTitle></CardHeader>
           <CardContent>
@@ -59,7 +59,7 @@ export default async function ReviewDetailPage({ params }: { params: { id: strin
           </CardContent>
         </Card>
 
-        {/* Right Column: Detailed Analysis */}
+        {/* Right Column: Categorized Analysis */}
         <div className="space-y-6 lg:col-span-1">
           {report.detailedAnalysis?.map((section) => (
             <Card key={section.category}>
@@ -85,6 +85,30 @@ export default async function ReviewDetailPage({ params }: { params: { id: strin
           ))}
         </div>
       </div>
+
+      {/* --- NEW SECTION: Consolidated Improvement Suggestions (Full Width) --- */}
+      <Card>
+        <CardHeader><CardTitle className="text-lg">Consolidated Improvement Suggestions</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          {allIssues.length > 0 ? (
+            allIssues.map((issue, index) => (
+              <div key={index} className="flex items-start gap-4 p-4 border rounded-md">
+                <Badge variant={getBadgeVariant(issue.severity)}>{issue.severity}</Badge>
+                <div className="min-w-0">
+                  <h3 className="font-semibold">{issue.title} <span className="text-xs text-slate-500">({issue.category})</span></h3>
+                  <p className="text-sm text-slate-600 mb-2 break-words">{issue.description}</p>
+                  <div className="text-xs text-slate-500 mb-2 flex items-center gap-1"><Code className="h-3 w-3" /><span>Line {issue.lineNumber}</span></div>
+                  <pre className="bg-slate-100 p-2 rounded-md text-xs font-mono whitespace-pre-wrap break-words">{issue.recommendation}</pre>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-slate-500 text-center py-4">No specific improvement suggestions found.</p>
+          )}
+        </CardContent>
+      </Card>
+      {/* --- END NEW SECTION --- */}
+
     </div>
   );
 }
