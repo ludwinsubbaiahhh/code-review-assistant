@@ -57,13 +57,10 @@ export default function HomePage() {
     reader.readAsText(selectedFile);
   };
 
-  // --- THIS IS THE FIX ---
-  // Correctly create the allIssues array by mapping the category to each issue
-  const allIssues = reviewReport?.detailedAnalysis?.flatMap(section => 
+  const allIssues = reviewReport?.detailedAnalysis?.flatMap(section =>
     section.issues.map(issue => ({ ...issue, category: section.category }))
   ) || [];
   const totalIssues = allIssues.length;
-  // --- END OF FIX ---
 
   return (
     <main className="flex flex-col items-center p-8 font-sans">
@@ -74,7 +71,7 @@ export default function HomePage() {
             <p className="text-slate-600 mb-8">Upload your source code to get an instant review.</p>
           </div>
         )}
-        
+
         <Card className="mb-8 shadow-lg max-w-4xl mx-auto">
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="flex items-center gap-4">
@@ -85,7 +82,8 @@ export default function HomePage() {
                 </div>
                 <input id="file-upload" type="file" onChange={handleFileChange} required className="hidden" />
               </label>
-              <Button type="submit" disabled={isLoading || !selected.File} className="bg-purple-600 hover:bg-purple-700 px-8">
+              {/* --- THIS IS THE FIX --- */}
+              <Button type="submit" disabled={isLoading || !selectedFile} className="bg-purple-600 hover:bg-purple-700 px-8">
                 {isLoading ? 'Analyzing...' : 'Start AI Analysis'}
               </Button>
             </form>
@@ -152,4 +150,4 @@ export default function HomePage() {
       </div>
     </main>
   );
-} 
+}
