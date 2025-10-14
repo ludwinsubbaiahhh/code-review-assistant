@@ -22,7 +22,7 @@ const getBadgeVariant = (severity: 'HIGH' | 'MEDIUM' | 'LOW'): "destructive" | "
   }
 };
 
-export default async function ReviewDetailPage({ params }: PageProps) { // Use the new type here
+export default async function ReviewDetailPage({ params }: any) { // Use the new type here
   const review = await prisma.review.findUnique({ where: { id: params.id } });
   if (!review) notFound();
 
