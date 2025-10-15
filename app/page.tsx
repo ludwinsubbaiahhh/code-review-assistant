@@ -57,22 +57,21 @@ export default function HomePage() {
     reader.readAsText(selectedFile);
   };
 
-  // Helper to calculate total issues from the report state
-  const totalIssues = reviewReport?.detailedAnalysis?.reduce((acc, section) => acc + (section.issues?.length || 0), 0) || 0;
-  const allIssues = reviewReport?.detailedAnalysis?.flatMap(section => section.issues || []) || [];
+  const allIssues = reviewReport?.detailedAnalysis?.flatMap(section =>
+    section.issues.map(issue => ({ ...issue, category: section.category }))
+  ) || [];
+  const totalIssues = allIssues.length;
 
   return (
     <main className="flex flex-col items-center p-8 font-sans">
       <div className="w-full max-w-6xl">
-        {/* Conditional Title */}
         {!reviewReport && (
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-2 text-slate-800">AI-Powered Code Analysis</h1>
             <p className="text-slate-600 mb-8">Upload your source code to get an instant review.</p>
           </div>
         )}
-        
-        {/* Upload Form */}
+
         <Card className="mb-8 shadow-lg max-w-4xl mx-auto">
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="flex items-center gap-4">
@@ -83,6 +82,7 @@ export default function HomePage() {
                 </div>
                 <input id="file-upload" type="file" onChange={handleFileChange} required className="hidden" />
               </label>
+              {/* --- THIS IS THE FIX --- */}
               <Button type="submit" disabled={isLoading || !selectedFile} className="bg-purple-600 hover:bg-purple-700 px-8">
                 {isLoading ? 'Analyzing...' : 'Start AI Analysis'}
               </Button>
@@ -92,19 +92,16 @@ export default function HomePage() {
 
         {error && <Card className="bg-red-50 border-red-200 max-w-4xl mx-auto"><CardContent className="p-4 text-center text-red-700">{error}</CardContent></Card>}
 
-        {/* This is the new, unified report layout */}
         {reviewReport && selectedFile && (
           <div className="space-y-6">
             <div className="flex items-baseline gap-4">
               <h1 className="text-3xl font-bold">{selectedFile.name}</h1>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Overall Score</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{reviewReport.overallScore}<span className="text-xl text-slate-500">/100</span></div></CardContent></Card>
               <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Issues Found</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{totalIssues}</div></CardContent></Card>
               <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Language</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{reviewReport.language}</div></CardContent></Card>
             </div>
-            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="lg:col-span-1"><CardHeader><CardTitle className="text-lg">Reviewed Code</CardTitle></CardHeader><CardContent><pre className="bg-slate-100 p-4 rounded-md text-xs font-mono max-h-[80vh] overflow-y-auto">{codeContent}</pre></CardContent></Card>
               <div className="space-y-6 lg:col-span-1">
@@ -130,7 +127,6 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-
             <Card>
               <CardHeader><CardTitle className="text-lg">Consolidated Improvement Suggestions</CardTitle></CardHeader>
               <CardContent className="space-y-4">

@@ -7,6 +7,13 @@ import { Code, FileText, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+// --- THIS IS THE FIX ---
+// Define a more standard type for the page's props
+type PageProps = {
+  params: { id: string };
+};
+// --- END OF FIX ---
+
 const getBadgeVariant = (severity: 'HIGH' | 'MEDIUM' | 'LOW'): "destructive" | "default" | "secondary" => {
   switch (severity) {
     case 'HIGH': return 'destructive';
@@ -15,17 +22,16 @@ const getBadgeVariant = (severity: 'HIGH' | 'MEDIUM' | 'LOW'): "destructive" | "
   }
 };
 
-export default async function ReviewDetailPage({ params }: { params: { id: string } }) {
+export default async function ReviewDetailPage({ params }: any) { // Use the new type here
   const review = await prisma.review.findUnique({ where: { id: params.id } });
   if (!review) notFound();
-  
+
   const report = review.report as any as DetailedReviewReport;
   if (!report) {
       return <div>Error: Report data is missing or corrupted.</div>;
   }
 
-  const allIssues = report.detailedAnalysis?.flatMap(section => section.issues || []) || [];
-  const totalIssues = allIssues.length;
+  const totalIssues = report.detailedAnalysis?.reduce((acc, section) => acc + (section.issues?.length || 0), 0) || 0;
 
   return (
     <div className="space-y-6">
@@ -41,17 +47,14 @@ export default async function ReviewDetailPage({ params }: { params: { id: strin
           <p className="text-slate-500">Analysis performed on {new Date(review.createdAt).toLocaleString()}</p>
         </div>
       </div>
-      
-      {/* Top Stat Cards */}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Overall Score</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{report.overallScore}<span className="text-xl text-slate-500">/100</span></div></CardContent></Card>
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Issues Found</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{totalIssues}</div></CardContent></Card>
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Language</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{report.language}</div></CardContent></Card>
       </div>
-      
-      {/* Upper Section: Two-Column Layout for Code and Categorized Analysis */}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column: Reviewed Code */}
         <Card className="lg:col-span-1">
           <CardHeader><CardTitle className="text-lg">Reviewed Code</CardTitle></CardHeader>
           <CardContent>
@@ -59,7 +62,6 @@ export default async function ReviewDetailPage({ params }: { params: { id: strin
           </CardContent>
         </Card>
 
-        {/* Right Column: Categorized Analysis */}
         <div className="space-y-6 lg:col-span-1">
           {report.detailedAnalysis?.map((section) => (
             <Card key={section.category}>
@@ -85,30 +87,6 @@ export default async function ReviewDetailPage({ params }: { params: { id: strin
           ))}
         </div>
       </div>
-
-      {/* --- NEW SECTION: Consolidated Improvement Suggestions (Full Width) --- */}
-      <Card>
-        <CardHeader><CardTitle className="text-lg">Consolidated Improvement Suggestions</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          {allIssues.length > 0 ? (
-            allIssues.map((issue, index) => (
-              <div key={index} className="flex items-start gap-4 p-4 border rounded-md">
-                <Badge variant={getBadgeVariant(issue.severity)}>{issue.severity}</Badge>
-                <div className="min-w-0">
-                  <h3 className="font-semibold">{issue.title} <span className="text-xs text-slate-500">({issue.category})</span></h3>
-                  <p className="text-sm text-slate-600 mb-2 break-words">{issue.description}</p>
-                  <div className="text-xs text-slate-500 mb-2 flex items-center gap-1"><Code className="h-3 w-3" /><span>Line {issue.lineNumber}</span></div>
-                  <pre className="bg-slate-100 p-2 rounded-md text-xs font-mono whitespace-pre-wrap break-words">{issue.recommendation}</pre>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-slate-500 text-center py-4">No specific improvement suggestions found.</p>
-          )}
-        </CardContent>
-      </Card>
-      {/* --- END NEW SECTION --- */}
-
     </div>
   );
 }
