@@ -11,6 +11,8 @@
 
 ---
 
+![CodeReview AI Homepage](https://github.com/ludwinsubbaiahhh/code-review-assistant/blob/main/home%20page.png?raw=true)
+
 ## 🚀 Features
 
 This project successfully implements all core and optional features outlined in the project brief, delivering a complete and polished user experience.
