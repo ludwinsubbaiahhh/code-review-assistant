@@ -1,6 +1,6 @@
 # CodeReview AI ✨
 
-**CodeReview AI** is a professional, AI-powered platform designed to automate code reviews. It analyzes source code for structure, readability, security, and best practices, providing actionable improvement suggestions in a clear, data-driven dashboard[cite: 2, 3].
+**CodeReview AI** is a professional, AI-powered platform designed to automate code reviews. It analyzes source code for structure, readability, security, and best practices, providing actionable improvement suggestions in a clear, data-driven dashboard.
 
 [![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
@@ -18,19 +18,19 @@
 This project successfully implements all core and optional features outlined in the project brief, delivering a complete and polished user experience.
 
 #### Core Features
--   **Source Code File Upload**: Users can upload source code files directly for analysis[cite: 6].
--   **AI-Powered Analysis**: Leverages the OpenAI GPT-4 Turbo model via a backend API for in-depth code review[cite: 11].
+-   **Source Code File Upload**: Users can upload source code files directly for analysis.
+-   **AI-Powered Analysis**: Leverages the OpenAI GPT-4 Turbo model via a backend API for in-depth code review.
 -   **Detailed, Categorized Reports**: The AI provides a structured report with an overall score and a breakdown of issues by category:
     -   Readability
     -   Modularity & Best Practices
     -   Potential Bugs
--   **Actionable Improvement Suggestions**: Each identified issue comes with a severity level (High, Medium, Low), a clear description, the relevant line number, and a code snippet demonstrating the recommended fix[cite: 7].
+-   **Actionable Improvement Suggestions**: Each identified issue comes with a severity level (High, Medium, Low), a clear description, the relevant line number, and a code snippet demonstrating the recommended fix.
 -   **Side-by-Side Code View**: The report page displays the user's code alongside the AI's analysis for easy reference.
 
 #### "Optional" Features (Completed)
--   **Analytics Dashboard**: A comprehensive dashboard provides a historical overview of all past reviews, including key metrics like total reviews and average score[cite: 8].
--   **Persistent Report Storage**: All review reports are saved to a Supabase PostgreSQL database, ensuring data persistence[cite: 12].
--   **View Past Reports**: The dashboard allows users to click on any past report to view its full, detailed analysis page[cite: 8].
+-   **Analytics Dashboard**: A comprehensive dashboard provides a historical overview of all past reviews, including key metrics like total reviews and average score.
+-   **Persistent Report Storage**: All review reports are saved to a Supabase PostgreSQL database, ensuring data persistence.
+-   **View Past Reports**: The dashboard allows users to click on any past report to view its full, detailed analysis page.
 
 ## 🛠️ Tech Stack
 
