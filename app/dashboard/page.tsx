@@ -5,6 +5,22 @@ import { AdvancedReviewReport } from "@/lib/llm";
 import { FileText, Star, BarChart2 } from "lucide-react";
 import Link from "next/link";
 
+// app/dashboard/page.tsx
+
+//... (imports remain the same)
+
+export default async function DashboardPage() {
+  // --- ADD THIS LINE FOR DEBUGGING ---
+  console.log("DATABASE_URL on Vercel:", process.env.DATABASE_URL ? "Exists" : "MISSING!");
+  // --- END OF DEBUGGING LINE ---
+
+  const reviews = await prisma.review.findMany({
+    //... (rest of the function is the same)
+  });
+
+  //...
+}
+
 // Helper to safely parse and handle both old and new report formats
 function parseReport(report: any): AdvancedReviewReport | null {
   try {
