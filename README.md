@@ -57,6 +57,7 @@ cd code-review-assistant
 Bash
 
 npm install
+
 **3. Set up environment variables: This project requires a Supabase database and an OpenAI API key.
 
 Create a new file in the root directory named .env
@@ -71,11 +72,13 @@ DATABASE_URL="postgresql://postgres.[your-project-id]:[your-password]@aws-1-ap-s
 
 # 3. Get your API key from OpenAI (https://platform.openai.com/api-keys)
 OPENAI_API_KEY="sk-..."
+
 **4. Generate Prisma Client: After setting up your database URL, you must generate the Prisma client to connect to it.
 
 Bash
 
 npx prisma generate
+
 **5. Run the development server:
 
 Bash
