@@ -9,7 +9,7 @@
 
 **Live Demo:** https://code-review-assistant-ak87r55yp-ludwin-subbaiahs-projects.vercel.app/
 
----
+DEMO VIDEO LINK: https://drive.google.com/file/d/15YizhzswDnsnzymuRZTO_qNG8CyLC45s/view?usp=sharing
 
 ![CodeReview AI Homepage](https://github.com/ludwinsubbaiahhh/code-review-assistant/blob/main/home%20page.png?raw=true)
 
@@ -48,6 +48,37 @@ This project successfully implements all core and optional features outlined in 
 To run this project locally, follow these steps:
 
 **1. Clone the repository:**
-```bash
+bash
 git clone [https://github.com/ludwinsubbaiahhh/code-review-assistant.git](https://github.com/ludwinsubbaiahhh/code-review-assistant.git)
 cd code-review-assistant
+
+**2. Install dependencies: This project uses npm for package management.
+
+Bash
+
+npm install
+**3. Set up environment variables: This project requires a Supabase database and an OpenAI API key.
+
+Create a new file in the root directory named .env
+
+Copy the contents of the .env.example file (if you have one) or add the following lines manually:
+
+Code snippet
+
+# 1. Get your connection string from Supabase (Settings > Database > Connection string > Transaction Pooler)
+# 2. Make sure to add ?pgbouncer=true to the end of the URL
+DATABASE_URL="postgresql://postgres.[your-project-id]:[your-password]@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true"
+
+# 3. Get your API key from OpenAI (https://platform.openai.com/api-keys)
+OPENAI_API_KEY="sk-..."
+**4. Generate Prisma Client: After setting up your database URL, you must generate the Prisma client to connect to it.
+
+Bash
+
+npx prisma generate
+**5. Run the development server:
+
+Bash
+
+npm run dev
+The application will now be running on http://localhost:3000.
